@@ -170,34 +170,36 @@
     }
 
     function showAnswer() {
-        const ad = document.getElementById('answer-display');
-        let sol = "";
-        const mm = currentCompound.molarMass;
-        const qStr = currentProblem.q;
-        const q = parseFloat(qStr);
+    const ad = document.getElementById('answer-display');
+    const mm = currentCompound.molarMass;
+    const qStr = currentProblem.q;
+    const q = parseFloat(qStr);
 
-        // Header showing molar mass first
-        let header = `<strong>Molar Mass:</strong> ${mm} g/mol<br><br><strong>Setup:</strong><br>`;
+    let header = `<strong>Molar Mass:</strong> ${mm} g/mol<br><br><strong>Setup:</strong><br>`;
+    let stepsHtml = "";
 
-        if (currentProblem.type === "molToGram") {
-            sol = `${q} mol × (${mm} g / 1 mol) = <b>${(q * mm).toFixed(2)} grams</b>`;
-        } else if (currentProblem.type === "gramToMol") {
-            sol = `${q} g × (1 mol / ${mm} g) = <b>${(q / mm).toFixed(3)} moles</b>`;
-        } else if (currentProblem.type === "molToUnit") {
-            sol = `${q} mol × (6.022x10²³ units / 1 mol) = <b>${(q * 6.022).toFixed(2)} x 10²³ units</b>`;
-        } else if (currentProblem.type === "unitToMol") {
-            sol = `${q}x10²³ units × (1 mol / 6.022x10²³ units) = <b>${(q / 6.022).toFixed(3)} moles</b>`;
-        } else if (currentProblem.type === "gramToUnit") {
-            const result = (q / mm * 6.022).toFixed(2);
-            sol = `${q} g × (1 mol / ${mm} g) × (6.022x10²³ units / 1 mol) = <b>${result} x 10²³ units</b>`;
-        } else if (currentProblem.type === "unitToGram") {
-            const result = (q / 6.022 * mm).toFixed(2);
-            sol = `${q}x10²³ units × (1 mol / 6.022x10²³ units) × (${mm} g / 1 mol) = <b>${result} grams</b>`;
-        }
+    // Helper to build a fraction block
+    const frac = (num, den) => `<div class="fraction"><span class="numerator">${num}</span><span class="denominator">${den}</span></div>`;
 
-        ad.innerHTML = header + "<span class='setup-step'>" + sol + "</span>";
-        ad.classList.add('visible');
+    if (currentProblem.type === "molToGram") {
+        stepsHtml = `<div class="setup-container">${q} mol &times; ${frac(mm + ' g', '1 mol')} = <b>${(q * mm).toFixed(2)} grams</b></div>`;
+    } else if (currentProblem.type === "gramToMol") {
+        stepsHtml = `<div class="setup-container">${q} g &times; ${frac('1 mol', mm + ' g')} = <b>${(q / mm).toFixed(3)} moles</b></div>`;
+    } else if (currentProblem.type === "molToUnit") {
+        stepsHtml = `<div class="setup-container">${q} mol &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q * 6.022).toFixed(2)} &times; 10²³ units</b></div>`;
+    } else if (currentProblem.type === "unitToMol") {
+        stepsHtml = `<div class="setup-container">${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} = <b>${(q / 6.022).toFixed(3)} moles</b></div>`;
+    } else if (currentProblem.type === "gramToUnit") {
+        const result = (q / mm * 6.022).toFixed(2);
+        stepsHtml = `<div class="setup-container">${q} g &times; ${frac('1 mol', mm + ' g')} &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${result} &times; 10²³ units</b></div>`;
+    } else if (currentProblem.type === "unitToGram") {
+        const result = (q / 6.022 * mm).toFixed(2);
+        stepsHtml = `<div class="setup-container">${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} &times; ${frac(mm + ' g', '1 mol')} = <b>${result} grams</b></div>`;
     }
+
+    ad.innerHTML = header + stepsHtml;
+    ad.classList.add('visible');
+}
 
     generateNew();
 </script>
