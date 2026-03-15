@@ -77,9 +77,7 @@
         "Cl": 35.45, "Br": 79.90, "N": 14.01, "O": 16.00, "S": 32.06, "C": 12.01, "P": 30.97
     };
 
-    const cations = [
-        {s:"Na", c:1}, {s:"K", c:1}, {s:"Mg", c:2}, {s:"Ca", c:2}, {s:"Al", c:3}, {s:"Fe", c:3}, {s:"Cu", c:2}
-    ];
+    const cations = [{s:"Na", c:1}, {s:"K", c:1}, {s:"Mg", c:2}, {s:"Ca", c:2}, {s:"Al", c:3}, {s:"Fe", c:3}, {s:"Cu", c:2}];
     const anions = [
         {n:"Chloride", s:"Cl", c:1, atoms:{"Cl":1}},
         {n:"Bromide", s:"Br", c:1, atoms:{"Br":1}},
@@ -91,16 +89,13 @@
 
     let currentCompound = {};
     let currentProblem = {};
-    const NA = 6.022e23;
+    let phase = 1; // 1: Molar Mass, 2: Select Mode, 3: Solve Conversion
 
     function gcd(a, b) { return b ? gcd(b, a % b) : a; }
-
-    // FIXED: Only formulas get subscripted now
-    function formatFormula(txt) {
-        return txt.replace(/([A-Za-z\)])(\d+)/g, '$1<sub>$2</sub>');
-    }
+    function formatFormula(txt) { return txt.replace(/([A-Za-z\)])(\d+)/g, '$1<sub>$2</sub>'); }
 
     function generateNew() {
+        phase = 1;
         const cat = cations[Math.floor(Math.random() * cations.length)];
         const ani = anions[Math.floor(Math.random() * anions.length)];
         const common = gcd(cat.c, ani.c);
@@ -108,98 +103,72 @@
         const s2 = cat.c / common;
 
         let mass = (elements[cat.s] * s1);
-        for (let el in ani.atoms) {
-            mass += (elements[el] * ani.atoms[el] * s2);
-        }
-        
-        const cPart = (s1 > 1 && cat.s.length > 2) ? `(${cat.s})${s1}` : `${cat.s}${s1 > 1 ? s1 : ''}`;
-        const aPart = (s2 > 1 && ani.s.length > 2) ? `(${ani.s})${s2}` : `${ani.s}${s2 > 1 ? s2 : ''}`;
+        for (let el in ani.atoms) { mass += (elements[el] * ani.atoms[el] * s2); }
         
         currentCompound = {
-            formula: cPart + aPart,
+            formula: ((s1 > 1 && cat.s.length > 2) ? `(${cat.s})${s1}` : `${cat.s}${s1 > 1 ? s1 : ''}`) + 
+                     ((s2 > 1 && ani.s.length > 2) ? `(${ani.s})${s2}` : `${ani.s}${s2 > 1 ? s2 : ''}`),
             molarMass: mass.toFixed(2)
         };
 
-        // UI Update: Using formatFormula only here
         document.getElementById('formula-display').innerHTML = formatFormula(currentCompound.formula);
+        document.getElementById('problem-text').innerText = "Step 1: Calculate the molar mass of this compound.";
+        document.querySelector('.mode-container').style.display = 'none';
+        document.querySelector('.check-btn').innerText = "Check Molar Mass";
+        document.getElementById('answer-display').style.display = 'none';
         document.getElementById('answer-display').classList.remove('visible');
-        
-        // FIXED: Message no longer spoils the molar mass
-        document.getElementById('problem-text').innerText = "New compound loaded! First, calculate its molar mass, then choose a conversion mode below.";
     }
 
     function setMode(mode) {
-        if (!currentCompound.formula) return;
+        phase = 3;
         const randVal = (Math.random() * 5 + 0.5).toFixed(2);
         const randUnits = (Math.random() * 5 + 1).toFixed(2) + " x 10²³";
         const isReverse = Math.random() > 0.5;
-        
-        let text = "";
-        const formulaHtml = formatFormula(currentCompound.formula);
+        const fHtml = formatFormula(currentCompound.formula);
 
         if (mode === 'massMole') {
-            if (isReverse) {
-                text = `Calculate the mass in grams of ${randVal} moles of ${formulaHtml}.`;
-                currentProblem = { q: randVal, type: "molToGram" };
-            } else {
-                const gVal = (randVal * currentCompound.molarMass).toFixed(1);
-                text = `How many moles are in ${gVal} grams of ${formulaHtml}?`;
-                currentProblem = { q: gVal, type: "gramToMol" };
-            }
+            currentProblem = isReverse ? { q: randVal, type: "molToGram", txt: `Mass in grams of ${randVal} moles of ${fHtml}?` } 
+                                     : { q: (randVal * currentCompound.molarMass).toFixed(1), type: "gramToMol", txt: `Moles in ${(randVal * currentCompound.molarMass).toFixed(1)} grams of ${fHtml}?` };
         } else if (mode === 'moleUnits') {
-            if (isReverse) {
-                text = `How many moles are in ${randUnits} formula units of ${formulaHtml}?`;
-                currentProblem = { q: randUnits, type: "unitToMol" };
-            } else {
-                text = `How many formula units are in ${randVal} moles of ${formulaHtml}?`;
-                currentProblem = { q: randVal, type: "molToUnit" };
-            }
+            currentProblem = isReverse ? { q: randUnits, type: "unitToMol", txt: `Moles in ${randUnits} formula units of ${fHtml}?` }
+                                     : { q: randVal, type: "molToUnit", txt: `Formula units in ${randVal} moles of ${fHtml}?` };
         } else if (mode === 'massUnits') {
-            if (isReverse) {
-                text = `Calculate the mass in grams of ${randUnits} formula units of ${formulaHtml}.`;
-                currentProblem = { q: randUnits, type: "unitToGram" };
-            } else {
-                const gVal = (randVal * currentCompound.molarMass).toFixed(1);
-                text = `How many formula units are in ${gVal} grams of ${formulaHtml}?`;
-                currentProblem = { q: gVal, type: "gramToUnit" };
-            }
+            const gVal = (randVal * currentCompound.molarMass).toFixed(1);
+            currentProblem = isReverse ? { q: randUnits, type: "unitToGram", txt: `Mass in grams of ${randUnits} formula units of ${fHtml}?` }
+                                     : { q: gVal, type: "gramToUnit", txt: `Formula units in ${gVal} grams of ${fHtml}?` };
         }
 
-        document.getElementById('problem-text').innerHTML = "<strong>Problem:</strong> " + text;
-        document.getElementById('answer-display').classList.remove('visible');
+        document.getElementById('problem-text').innerHTML = "<strong>Step 2:</strong> " + currentProblem.txt;
+        document.querySelector('.check-btn').innerText = "Check Conversion Setup";
+        document.getElementById('answer-display').style.display = 'none';
     }
 
     function showAnswer() {
-    const ad = document.getElementById('answer-display');
-    const mm = currentCompound.molarMass;
-    const qStr = currentProblem.q;
-    const q = parseFloat(qStr);
+        const ad = document.getElementById('answer-display');
+        ad.style.display = 'block';
+        ad.classList.add('visible');
 
-    let header = `<strong>Molar Mass:</strong> ${mm} g/mol<br><br><strong>Setup:</strong><br>`;
-    let stepsHtml = "";
+        if (phase === 1) {
+            ad.innerHTML = `<strong>Molar Mass:</strong> ${currentCompound.molarMass} g/mol`;
+            document.querySelector('.mode-container').style.display = 'grid';
+            document.getElementById('problem-text').innerText = "Correct! Now select a conversion type below:";
+            phase = 2;
+        } else if (phase === 3) {
+            const mm = currentCompound.molarMass;
+            const q = parseFloat(currentProblem.q);
+            const frac = (num, den) => `<div class="fraction"><span class="numerator">${num}</span><span class="denominator">${den}</span></div>`;
+            let steps = "";
 
-    // Helper to build a fraction block
-    const frac = (num, den) => `<div class="fraction"><span class="numerator">${num}</span><span class="denominator">${den}</span></div>`;
+            if (currentProblem.type === "molToGram") steps = `${q} mol &times; ${frac(mm+' g', '1 mol')} = <b>${(q*mm).toFixed(2)} g</b>`;
+            else if (currentProblem.type === "gramToMol") steps = `${q} g &times; ${frac('1 mol', mm+' g')} = <b>${(q/mm).toFixed(3)} mol</b>`;
+            else if (currentProblem.type === "molToUnit") steps = `${q} mol &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q*6.022).toFixed(2)}&times;10²³</b>`;
+            else if (currentProblem.type === "unitToMol") steps = `${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} = <b>${(q/6.022).toFixed(3)} mol</b>`;
+            else if (currentProblem.type === "gramToUnit") steps = `${q} g &times; ${frac('1 mol', mm+' g')} &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q/mm*6.022).toFixed(2)}&times;10²³</b>`;
+            else if (currentProblem.type === "unitToGram") steps = `${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} &times; ${frac(mm+' g', '1 mol')} = <b>${(q/6.022*mm).toFixed(2)} g</b>`;
 
-    if (currentProblem.type === "molToGram") {
-        stepsHtml = `<div class="setup-container">${q} mol &times; ${frac(mm + ' g', '1 mol')} = <b>${(q * mm).toFixed(2)} grams</b></div>`;
-    } else if (currentProblem.type === "gramToMol") {
-        stepsHtml = `<div class="setup-container">${q} g &times; ${frac('1 mol', mm + ' g')} = <b>${(q / mm).toFixed(3)} moles</b></div>`;
-    } else if (currentProblem.type === "molToUnit") {
-        stepsHtml = `<div class="setup-container">${q} mol &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q * 6.022).toFixed(2)} &times; 10²³ units</b></div>`;
-    } else if (currentProblem.type === "unitToMol") {
-        stepsHtml = `<div class="setup-container">${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} = <b>${(q / 6.022).toFixed(3)} moles</b></div>`;
-    } else if (currentProblem.type === "gramToUnit") {
-        const result = (q / mm * 6.022).toFixed(2);
-        stepsHtml = `<div class="setup-container">${q} g &times; ${frac('1 mol', mm + ' g')} &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${result} &times; 10²³ units</b></div>`;
-    } else if (currentProblem.type === "unitToGram") {
-        const result = (q / 6.022 * mm).toFixed(2);
-        stepsHtml = `<div class="setup-container">${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} &times; ${frac(mm + ' g', '1 mol')} = <b>${result} grams</b></div>`;
+            ad.innerHTML = `<strong>Molar Mass:</strong> ${mm} g/mol<br><br><strong>Setup:</strong><div class="setup-container">${steps}</div>`;
+        }
     }
-
-    ad.innerHTML = header + stepsHtml;
-    ad.classList.add('visible');
-}
 
     generateNew();
 </script>
