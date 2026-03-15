@@ -96,6 +96,8 @@
 
     function generateNew() {
         phase = 1;
+        currentProblem = {}; // Clear the previous problem data
+        
         const cat = cations[Math.floor(Math.random() * cations.length)];
         const ani = anions[Math.floor(Math.random() * anions.length)];
         const common = gcd(cat.c, ani.c);
@@ -113,10 +115,14 @@
 
         document.getElementById('formula-display').innerHTML = formatFormula(currentCompound.formula);
         document.getElementById('problem-text').innerText = "Step 1: Calculate the molar mass of this compound.";
+        
+        // Ensure everything from the previous round is hidden/cleared
         document.querySelector('.mode-container').style.display = 'none';
         document.querySelector('.check-btn').innerText = "Check Molar Mass";
-        document.getElementById('answer-display').style.display = 'none';
-        document.getElementById('answer-display').classList.remove('visible');
+        const ad = document.getElementById('answer-display');
+        ad.style.display = 'none';
+        ad.innerHTML = ""; 
+        ad.classList.remove('visible');
     }
 
     function setMode(mode) {
@@ -145,31 +151,31 @@
 
     function showAnswer() {
         const ad = document.getElementById('answer-display');
+        const mm = currentCompound.molarMass;
         ad.style.display = 'block';
         ad.classList.add('visible');
 
         if (phase === 1) {
-            ad.innerHTML = `<strong>Molar Mass:</strong> ${currentCompound.molarMass} g/mol`;
+            // Only show the Molar Mass, wipe any leftover setup HTML
+            ad.innerHTML = `<strong>Molar Mass:</strong> ${mm} g/mol`;
             document.querySelector('.mode-container').style.display = 'grid';
             document.getElementById('problem-text').innerText = "Correct! Now select a conversion type below:";
             phase = 2;
         } else if (phase === 3) {
-            const mm = currentCompound.molarMass;
             const q = parseFloat(currentProblem.q);
             const frac = (num, den) => `<div class="fraction"><span class="numerator">${num}</span><span class="denominator">${den}</span></div>`;
             let steps = "";
 
             if (currentProblem.type === "molToGram") steps = `${q} mol &times; ${frac(mm+' g', '1 mol')} = <b>${(q*mm).toFixed(2)} g</b>`;
             else if (currentProblem.type === "gramToMol") steps = `${q} g &times; ${frac('1 mol', mm+' g')} = <b>${(q/mm).toFixed(3)} mol</b>`;
-            else if (currentProblem.type === "molToUnit") steps = `${q} mol &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q*6.022).toFixed(2)}&times;10²³</b>`;
+            else if (currentProblem.type === "molToUnit") steps = `${q} mol &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q*6.022).toFixed(2)}&times;10²³ units</b>`;
             else if (currentProblem.type === "unitToMol") steps = `${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} = <b>${(q/6.022).toFixed(3)} mol</b>`;
-            else if (currentProblem.type === "gramToUnit") steps = `${q} g &times; ${frac('1 mol', mm+' g')} &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q/mm*6.022).toFixed(2)}&times;10²³</b>`;
+            else if (currentProblem.type === "gramToUnit") steps = `${q} g &times; ${frac('1 mol', mm+' g')} &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q/mm*6.022).toFixed(2)}&times;10²³ units</b>`;
             else if (currentProblem.type === "unitToGram") steps = `${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} &times; ${frac(mm+' g', '1 mol')} = <b>${(q/6.022*mm).toFixed(2)} g</b>`;
 
             ad.innerHTML = `<strong>Molar Mass:</strong> ${mm} g/mol<br><br><strong>Setup:</strong><div class="setup-container">${steps}</div>`;
         }
     }
-
     generateNew();
 </script>
 </body>
