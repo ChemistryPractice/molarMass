@@ -25,6 +25,29 @@
 
         sub { font-size: 0.6em; }
         .setup-step { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+    /* Vertical Fraction Styling */
+        .fraction {
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 5px;
+        text-align: center;
+}
+.numerator {
+    display: block;
+    border-bottom: 2px solid var(--primary);
+    padding: 0 5px;
+}
+.denominator {
+    display: block;
+    padding: 0 5px;
+}
+.setup-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 1.1rem;
+    gap: 5px;
+}
     </style>
 </head>
 <body>
