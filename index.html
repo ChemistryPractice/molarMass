@@ -230,7 +230,7 @@
 
     function generateNew() {
         phase = 1;
-        currentProblem = {}; // Clear the previous problem data
+        currentProblem = {};
         
         const cat = cations[Math.floor(Math.random() * cations.length)];
         const ani = anions[Math.floor(Math.random() * anions.length)];
@@ -250,8 +250,6 @@
         document.getElementById('formula-display').innerHTML = formatFormula(currentCompound.formula);
         document.getElementById('problem-text').innerText = "Step 1: Calculate the molar mass of this compound.";
         
-        // Ensure everything from the previous round is hidden/cleared
-        document.querySelector('.mode-container').style.display = 'none';
         document.querySelector('.check-btn').innerText = "Check Molar Mass";
         const ad = document.getElementById('answer-display');
         ad.style.display = 'none';
@@ -259,10 +257,15 @@
         ad.classList.remove('visible');
     }
 
-    function setMode(mode) {
+    function setMode(mode, btn) {
+        // UI: Highlight active sidebar button
+        document.querySelectorAll('.side-btn').forEach(b => b.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+
         phase = 3;
-        const randVal = (Math.random() * 5 + 0.5).toFixed(2);
+        const randVal = (Math.random() * 5 + 0.5).toFixed(2); // Moles or standard multiplier
         const randUnits = (Math.random() * 5 + 1).toFixed(2) + " x 10²³";
+        const randVol = (Math.random() * 50 + 10).toFixed(1); // Volume between 10-60L
         const isReverse = Math.random() > 0.5;
         const fHtml = formatFormula(currentCompound.formula);
 
@@ -276,6 +279,18 @@
             const gVal = (randVal * currentCompound.molarMass).toFixed(1);
             currentProblem = isReverse ? { q: randUnits, type: "unitToGram", txt: `Mass in grams of ${randUnits} formula units of ${fHtml}?` }
                                      : { q: gVal, type: "gramToUnit", txt: `Formula units in ${gVal} grams of ${fHtml}?` };
+        } 
+        // NEW LOGIC FOR VOLUME CONVERSIONS
+        else if (mode === 'volMole') {
+            currentProblem = isReverse ? { q: randVol, type: "volToMol", txt: `Moles in ${randVol} L of ${fHtml} gas at STP?` }
+                                     : { q: randVal, type: "molToVol", txt: `Volume in liters of ${randVal} moles of ${fHtml} gas at STP?` };
+        } else if (mode === 'volMass') {
+            const gVal = (randVal * currentCompound.molarMass).toFixed(1);
+            currentProblem = isReverse ? { q: randVol, type: "volToGram", txt: `Mass in grams of ${randVol} L of ${fHtml} gas at STP?` }
+                                     : { q: gVal, type: "gramToVol", txt: `Volume in liters of ${gVal} grams of ${fHtml} gas at STP?` };
+        } else if (mode === 'volUnits') {
+            currentProblem = isReverse ? { q: randVol, type: "volToUnit", txt: `Formula units in ${randVol} L of ${fHtml} gas at STP?` }
+                                     : { q: randUnits, type: "unitToVol", txt: `Volume in liters of ${randUnits} formula units of ${fHtml} gas at STP?` };
         }
 
         document.getElementById('problem-text').innerHTML = "<strong>Step 2:</strong> " + currentProblem.txt;
@@ -290,22 +305,29 @@
         ad.classList.add('visible');
 
         if (phase === 1) {
-            // Only show the Molar Mass, wipe any leftover setup HTML
             ad.innerHTML = `<strong>Molar Mass:</strong> ${mm} g/mol`;
-            document.querySelector('.mode-container').style.display = 'grid';
-            document.getElementById('problem-text').innerText = "Correct! Now select a conversion type below:";
+            document.getElementById('problem-text').innerText = "Correct! Now select a conversion type from the sidebar:";
             phase = 2;
         } else if (phase === 3) {
             const q = parseFloat(currentProblem.q);
             const frac = (num, den) => `<div class="fraction"><span class="numerator">${num}</span><span class="denominator">${den}</span></div>`;
             let steps = "";
 
+            // Existing logic
             if (currentProblem.type === "molToGram") steps = `${q} mol &times; ${frac(mm+' g', '1 mol')} = <b>${(q*mm).toFixed(2)} g</b>`;
             else if (currentProblem.type === "gramToMol") steps = `${q} g &times; ${frac('1 mol', mm+' g')} = <b>${(q/mm).toFixed(3)} mol</b>`;
             else if (currentProblem.type === "molToUnit") steps = `${q} mol &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q*6.022).toFixed(2)}&times;10²³ units</b>`;
             else if (currentProblem.type === "unitToMol") steps = `${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} = <b>${(q/6.022).toFixed(3)} mol</b>`;
             else if (currentProblem.type === "gramToUnit") steps = `${q} g &times; ${frac('1 mol', mm+' g')} &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q/mm*6.022).toFixed(2)}&times;10²³ units</b>`;
             else if (currentProblem.type === "unitToGram") steps = `${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} &times; ${frac(mm+' g', '1 mol')} = <b>${(q/6.022*mm).toFixed(2)} g</b>`;
+            
+            // NEW VOLUME STEP LOGIC
+            else if (currentProblem.type === "volToMol") steps = `${q} L &times; ${frac('1 mol', '22.4 L')} = <b>${(q/22.4).toFixed(3)} mol</b>`;
+            else if (currentProblem.type === "molToVol") steps = `${q} mol &times; ${frac('22.4 L', '1 mol')} = <b>${(q*22.4).toFixed(1)} L</b>`;
+            else if (currentProblem.type === "volToGram") steps = `${q} L &times; ${frac('1 mol', '22.4 L')} &times; ${frac(mm+' g', '1 mol')} = <b>${(q/22.4*mm).toFixed(2)} g</b>`;
+            else if (currentProblem.type === "gramToVol") steps = `${q} g &times; ${frac('1 mol', mm+' g')} &times; ${frac('22.4 L', '1 mol')} = <b>${(q/mm*22.4).toFixed(1)} L</b>`;
+            else if (currentProblem.type === "volToUnit") steps = `${q} L &times; ${frac('1 mol', '22.4 L')} &times; ${frac('6.022&times;10²³ units', '1 mol')} = <b>${(q/22.4*6.022).toFixed(2)}&times;10²³ units</b>`;
+            else if (currentProblem.type === "unitToVol") steps = `${q}&times;10²³ units &times; ${frac('1 mol', '6.022&times;10²³ units')} &times; ${frac('22.4 L', '1 mol')} = <b>${(q/6.022*22.4).toFixed(1)} L</b>`;
 
             ad.innerHTML = `<strong>Molar Mass:</strong> ${mm} g/mol<br><br><strong>Setup:</strong><div class="setup-container">${steps}</div>`;
         }
