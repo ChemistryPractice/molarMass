@@ -5,70 +5,204 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Molar Mass & Conversions</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #e67e22; --error: #c0392b; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
-        h1 { color: var(--primary); margin-bottom: 10px; }
-        #formula-display { font-size: 2.5rem; font-weight: bold; margin: 20px 0; color: var(--primary); min-height: 60px; }
-        
-        .mode-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        button { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        button:hover { background: var(--accent); transform: translateY(-2px); }
-        
-        .problem-box { background: #f9f9f9; padding: 20px; border-radius: 15px; border-left: 5px solid var(--primary); margin: 20px 0; text-align: left; min-height: 80px; }
-        
-        .check-btn { background: var(--error); width: 100%; margin-top: 10px; font-size: 1.1rem; }
-        
-        #answer-display { margin-top: 20px; padding: 15px; border-radius: 10px; background: #fff5f5; color: var(--error); display: none; text-align: left; line-height: 1.6; border: 1px solid #fab1a0; }
+        /* Color Scheme matched to Stoichiometry */
+        :root { 
+            --primary: #2c3e50; 
+            --accent: #e67e22; 
+            --error: #c0392b; 
+            --bg: #f4f7f6; 
+            --sidebar: #34495e; 
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            display: flex; 
+            min-height: 100vh; 
+        }
+
+        /* Sidebar Styles */
+        .sidebar { 
+            width: 220px; 
+            background: var(--sidebar); 
+            color: white; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+
+        .sidebar h2 { 
+            font-size: 1.2rem; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid var(--accent); 
+            padding-bottom: 10px; 
+        }
+
+        .side-btn { 
+            background: transparent; 
+            border: 1px solid rgba(255,255,255,0.3); 
+            color: white; 
+            padding: 12px; 
+            text-align: left; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            font-weight: bold;
+        }
+
+        .side-btn:hover, .side-btn.active { 
+            background: var(--accent); 
+            border-color: var(--accent); 
+        }
+
+        /* Main Content */
+        .main-content { 
+            flex: 1; 
+            padding: 40px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        .card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 800px; 
+            text-align: center;
+        }
+
+        /* Displays */
+        #formula-display { 
+            font-size: 2.5rem; 
+            font-weight: bold; 
+            margin: 20px 0; 
+            color: var(--primary); 
+            min-height: 60px; 
+            letter-spacing: 2px;
+        }
+
+        .problem-box { 
+            background: #f9f9f9; 
+            padding: 20px; 
+            border-radius: 15px; 
+            border-left: 5px solid var(--accent); 
+            margin: 20px 0; 
+            font-size: 1.1rem; 
+            line-height: 1.5; 
+            text-align: left;
+        }
+
+        /* Buttons */
+        .gen-btn { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            width: 100%; 
+            font-size: 1.1rem; 
+            margin-bottom: 10px; 
+            transition: 0.3s;
+        }
+
+        .gen-btn:hover { background: #34495e; }
+
+        .check-btn { 
+            background: var(--error); 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            width: 100%; 
+            font-size: 1.1rem;
+            opacity: 0.9; 
+            transition: 0.3s;
+        }
+
+        .check-btn:hover { opacity: 1; }
+
+        /* Results Display */
+        #answer-display { 
+            margin-top: 20px; 
+            padding: 20px; 
+            border-radius: 10px; 
+            background: #fff5f5; 
+            color: #2c3e50; 
+            display: none; 
+            border: 1px solid #fab1a0; 
+            text-align: left;
+        }
+
         #answer-display.visible { display: block; }
 
+        /* Fraction & Formula Styling */
         sub { font-size: 0.6em; }
-        .setup-step { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
-    /* Vertical Fraction Styling */
-        .fraction {
-            display: inline-block;
-            vertical-align: middle;
-            margin: 0 5px;
-        text-align: center;
-}
-.numerator {
-    display: block;
-    border-bottom: 2px solid var(--primary);
-    padding: 0 5px;
-}
-.denominator {
-    display: block;
-    padding: 0 5px;
-}
-.setup-container {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    font-size: 1.1rem;
-    gap: 5px;
-}
+        .setup-container { 
+            display: flex; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 5px; 
+            font-family: 'Courier New', monospace; 
+            margin-top: 15px; 
+        }
+        .fraction { 
+            display: inline-block; 
+            vertical-align: middle; 
+            text-align: center; 
+            margin: 0 5px; 
+        }
+        .numerator { 
+            display: block; 
+            border-bottom: 2px solid var(--primary); 
+            padding: 0 5px; 
+        }
+        .denominator { 
+            display: block; 
+            padding: 0 5px; 
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>Mole Conversions</h1>
-        <div id="formula-display">Generating...</div>
-        
-        <button onclick="generateNew()" style="background:#7f8c8d; margin-bottom:20px;">Get New Compound</button>
+<div class="sidebar">
+    <h2>Conversions</h2>
+    <button class="side-btn" onclick="setMode('massMole', this)">Mole ↔ Mass</button>
+    <button class="side-btn" onclick="setMode('moleUnits', this)">Moles ↔ Units</button>
+    <button class="side-btn" onclick="setMode('massUnits', this)">Mass ↔ Units</button>
+    
+    <button class="side-btn" onclick="setMode('volMole', this)">Volume ↔ Mole</button>
+    <button class="side-btn" onclick="setMode('volMass', this)">Volume ↔ Mass</button>
+    <button class="side-btn" onclick="setMode('volUnits', this)">Volume ↔ Units</button>
+</div>
 
-        <div class="mode-container">
-            <button onclick="setMode('massMole')">Mass ↔ Moles</button>
-            <button onclick="setMode('moleUnits')">Moles ↔ Units</button>
-            <button onclick="setMode('massUnits')">Mass ↔ Units</button>
+<div class="main-content">
+    <div class="card">
+        <h1 id="title-display">Mole Conversions</h1>
+        
+        <div id="formula-display">Generating...</div>
+
+        <button class="gen-btn" onclick="generateNew()">Get New Compound</button>
+
+        <div id="problem-text" class="problem-box">
+            Please select a conversion type from the sidebar to begin your practice.
         </div>
 
-        <div id="problem-text" class="problem-box">Select a mode above to begin.</div>
-
-        <button class="check-btn" onclick="showAnswer()">Check Answer & Setup</button>
+        <button class="check-btn" onclick="showAnswer()">Check Molar Mass</button>
+        
         <div id="answer-display"></div>
     </div>
+</div>
+
+</body>
 
 <script>
     const elements = {
