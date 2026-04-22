@@ -307,7 +307,7 @@
     function buildProblem() {
         phase = 3;
         const randVal = (Math.random() * 5 + 0.5).toFixed(2);
-        const randUnits = (Math.random() * 5 + 1).toFixed(2) + " x 10²³";
+        const randUnits = (Math.random() * 5 + 1).toFixed(2) + " E 23";
         const randVol = (Math.random() * 50 + 10).toFixed(1);
         const isReverse = Math.random() > 0.5;
         const fHtml = formatFormula(currentCompound.formula);
@@ -400,7 +400,7 @@
             }
 
             const randVal = (Math.random() * 5 + 0.5).toFixed(2);
-            const randUnits = (Math.random() * 5 + 1).toFixed(2) + " x 10^23";
+            const randUnits = (Math.random() * 5 + 1).toFixed(2) + " E 23";
             const randVol = (Math.random() * 50 + 10).toFixed(1);
             const isReverse = Math.random() > 0.5;
             let q = "";
