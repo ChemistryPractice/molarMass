@@ -369,21 +369,16 @@
         }
     }
     // ADD THIS NEW FUNCTION AT THE BOTTOM OF YOUR SCRIPT TAG
-    async function generateWorksheet() {
+    function generateWorksheet() {
         const btn = event.target;
         const originalText = btn.innerText;
-        
-        // 1. OPEN THE TAB IMMEDIATELY (Browser allows this because it's a direct click)
-        const newTab = window.open("about:blank", "_blank");
-        newTab.document.write("<html><body><h2 style='font-family:sans-serif; text-align:center; margin-top:50px;'>Generating your worksheet... please wait.</h2></body></html>");
-
         btn.innerText = "Generating Doc...";
         btn.disabled = true;
 
         const modes = ['massMole', 'moleUnits', 'massUnits', 'volMole', 'volMass', 'volUnits'];
         let worksheetQuestions = [];
 
-        // ... [The loop to generate worksheetQuestions stays exactly the same] ...
+        // ... [Keep your existing loop that builds the 20 questions] ...
         for (let i = 0; i < 20; i++) {
             const mode = modes[Math.floor(Math.random() * modes.length)];
             const isVol = ['volMole', 'volMass', 'volUnits'].includes(mode);
@@ -423,31 +418,28 @@
             worksheetQuestions.push(`${i + 1}. ${q}`);
         }
 
-        try {
-            const response = await fetch('https://script.google.com/macros/s/AKfycbxxoMXoFIz_yrI3vxKTfEnDDI4Qjip5TnTy9H58IbhbUUXvJyFxGMVav4rP9CyfbBwG/exec', {
-                method: 'POST',
-                // Note: We use text/plain to avoid CORS "pre-flight" blocks from Google
-                body: JSON.stringify({ questions: worksheetQuestions })
-            });
-            
-            const result = await response.json();
-            
-            if (result.url) {
-                // 2. REDIRECT THE TAB (The tab is already open, so this is allowed!)
-                newTab.location.href = result.url;
-            } else {
-                newTab.close();
-                alert("The document was created, but I couldn't get the link.");
-            }
-        } catch (err) {
-            newTab.close();
-            // If it fails, the file usually exists in Google Drive "Recent" anyway
-            alert("The connection timed out, but check your Google Drive 'Recent' folder! It likely generated anyway.");
-            console.error(err);
-        } finally {
+        // --- NEW FORM SUBMISSION LOGIC ---
+        // We create a temporary hidden form to bypass CORS issues
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'https://script.google.com/macros/s/AKfycbxxoMXoFIz_yrI3vxKTfEnDDI4Qjip5TnTy9H58IbhbUUXvJyFxGMVav4rP9CyfbBwG/exec';
+        form.target = '_blank'; // Opens the result in a new tab
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'questions';
+        hiddenInput.value = JSON.stringify(worksheetQuestions);
+
+        form.appendChild(hiddenInput);
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+
+        // Reset the button after a delay
+        setTimeout(() => {
             btn.innerText = originalText;
             btn.disabled = false;
-        }
+        }, 2000);
     }
 </script>
 </body>
