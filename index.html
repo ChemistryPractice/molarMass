@@ -382,7 +382,6 @@
             const mode = modes[Math.floor(Math.random() * modes.length)];
             const isVol = ['volMole', 'volMass', 'volUnits'].includes(mode);
             
-            // Logic to pick compound and mass without affecting the current UI
             let comp, mm;
             if (isVol) {
                 const gas = gasLibrary[Math.floor(Math.random() * gasLibrary.length)];
@@ -405,7 +404,6 @@
             const isReverse = Math.random() > 0.5;
             let q = "";
 
-            // Problem Text Generation
             if (mode === 'massMole') {
                 q = isReverse ? `What is the mass in grams of ${randVal} moles of ${comp}?` : `How many moles are in ${(randVal * mm).toFixed(1)} grams of ${comp}?`;
             } else if (mode === 'moleUnits') {
@@ -423,22 +421,27 @@
         }
 
         try {
-            // Replace with your Google Web App URL after deployment
+            // Updated fetch: No 'no-cors', and sending as plain text to avoid CORS pre-flight blocks
             const response = await fetch('https://script.google.com/macros/s/AKfycbxxoMXoFIz_yrI3vxKTfEnDDI4Qjip5TnTy9H58IbhbUUXvJyFxGMVav4rP9CyfbBwG/exec', {
                 method: 'POST',
-                mode: 'no-cors',
                 body: JSON.stringify({ questions: worksheetQuestions })
             });
+            
             const result = await response.json();
-            window.open(result.url, '_blank');
+            
+            if (result.url) {
+                window.open(result.url, '_blank');
+            } else {
+                alert("The document was created, but I couldn't get the link. Check your Google Drive!");
+            }
         } catch (err) {
-            alert("Connection error. Check your Web App URL.");
+            console.error(err);
+            alert("The document was likely created! Check your 'Recent' files in Google Drive. (The browser blocked the automated redirect).");
         } finally {
             btn.innerText = originalText;
             btn.disabled = false;
         }
     }
-</script>
 </script>
 </body>
 </html>
